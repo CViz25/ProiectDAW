@@ -1,51 +1,51 @@
-	<?php
-	require_once '/storage/ssd2/952/21893952/public_html/config/db.php';
+<?php
+require_once '/storage/ssd2/952/21893952/public_html/config/db.php';
 
-	session_start();
+session_start(); // Asigurăm că acest apel este chiar la început
 
-	if (isset($_SESSION['user_id'])) {
-		header("Location: index.php");
-		exit;
-	}
+if (isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
+}
 
-	$error = '';
+$error = '';
 
-	if ($_SERVER["REQUEST_METHOD"] == "POST") { 
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	// Verifică metoda de solicitare pentru a asigura că datele sunt transmise prin metoda POST
 	// Metoda POST este mai sigură pentru transferul datelor sensibile precum credențialele de autentificare
-		$email = trim($_POST['email']);
-		$password = trim($_POST['password']);
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
 
-		if (empty($email) || empty($password)) {
-			$error = 'Te rog completează toate câmpurile.';
-		} else { // Folosim prepare și bindParam pentru a preveni injecțiile SQL
-			$stmt = $pdo->prepare("SELECT id, parola, tip FROM utilizatori WHERE email = :email");
-			$stmt->bindParam(":email", $email, PDO::PARAM_STR);
-			$stmt->execute();
+    if (empty($email) || empty($password)) {
+        $error = 'Te rog completează toate câmpurile.';
+    } else { // Folosim prepare și bindParam pentru a preveni injecțiile SQL
+        $stmt = $pdo->prepare("SELECT id, parola, tip FROM utilizatori WHERE email = :email");
+        $stmt->bindParam(":email", $email, PDO::PARAM_STR);
+        $stmt->execute();
 
-			if ($stmt->rowCount() == 1) {
-				if ($row = $stmt->fetch()) {
-					$id = $row['id'];
-					$hashed_password = $row['parola'];
-					$tip = $row['tip'];
+        if ($stmt->rowCount() == 1) {
+            if ($row = $stmt->fetch()) {
+                $id = $row['id'];
+                $hashed_password = $row['parola'];
+                $tip = $row['tip'];
 
-					if (password_verify($password, $hashed_password)) { // Verifică dacă parola introdusă corespunde cu hash-ul parolei din DB
-						$_SESSION['user_id'] = $id;
-						$_SESSION['email'] = $email;
-						$_SESSION['tip'] = $tip; // Stocăm tipul utilizatorului în sesiune (user sau admin)
+                if (password_verify($password, $hashed_password)) { // Verifică dacă parola introdusă corespunde cu hash-ul parolei din DB
+                    $_SESSION['user_id'] = $id;
+                    $_SESSION['email'] = $email;
+                    $_SESSION['tip'] = $tip; // Stocăm tipul utilizatorului în sesiune (user sau admin)
 
-						header("Location: index.php");
-						exit;
-					} else {
-						$error = 'Parola introdusă nu este validă.';
-					}
-				}
-			} else {
-				$error = 'Nu există cont asociat cu acest email.';
-			}
-		}
-	}
-	?>
+                    header("Location: index.php");
+                    exit;
+                } else {
+                    $error = 'Parola introdusă nu este validă.';
+                }
+            }
+        } else {
+            $error = 'Nu există cont asociat cu acest email.';
+        }
+    }
+}
+?>
 
 
 	<!DOCTYPE html>
@@ -68,6 +68,7 @@
 	</head>
 	<body>
 		<div class="login-form">
+			<h1 class="text-center">Aplicație Rezervare Bilete</h2><br>
 			<h2 class="text-center">Autentificare</h2>
 			<p class="text-center">Pentru a accesa conținutul site-ului este necesar să aveți un cont.</p>
 			<form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
